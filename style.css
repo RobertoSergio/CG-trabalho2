@@ -11,3 +11,14 @@ body, html {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+#pointsDisplay {
+  position: fixed;
+  top: 5%;
+  right: 50%;
+  transform: translate(50%, 0%);
+  background-color: transparent;
+  padding: 10%;
+  font-family: Arial, sans-serif;
+  font-size: 34px;
+  font-weight: bold;
+}
