@@ -19,6 +19,9 @@ var
 		angle = 0.0,
 		moveRate = 1.0, 
 		speed = 20
+		points = 0;
+		shouldContinueLoop = true
+		aux=0;
 ;
 
 stack.push([[0.0, 1.20,  0.0], [1.0, 1.0, 1.0], stackPos]);
@@ -42,37 +45,46 @@ const loadImage = path => {
 }
 
 window.addEventListener('keydown', function(event) {
-  // ...
-  if (event.key === ' ' && moveRate != 0) {
-  	// affectedByPhysics = true;
+	// ...
+	if (event.key === ' ' && moveRate != 0) {
+	  // affectedByPhysics = true;
+	  // moveRate = 0;
+	  camPos[1] += 0.33;
+	  camLookAt[1] += 0.33;
+	  camUp[1] += 0.33;
+  
+	  const topp = stack[stack.length - 1];
+  
+	  stackPos++;
+  
+	  if (stackPos % 2 == 0) {
+		speed -= 0.5;
+		speed = math.max(speed, 1);
+	  }
+  
+	  if (currentDir === "z") {
+		stack.push([[-3.0, topp[0][1] + 0.33,  0.0], [topp[1][0], topp[1][1], topp[1][2]/* * 0.9*/], stackPos]);
+		currentDir = "x";
+	  } else if (currentDir === "x") {
+		stack.push([[ 0.0, topp[0][1] + 0.33, -3.0], [topp[1][0]/* * 0.9*/, topp[1][1], topp[1][2]], stackPos]);
+		currentDir = "z";
+	  }
+  
+	  stack = stack.slice(-10);
+  
+	  configCam();
+	} else if (event.key === ' ' && moveRate == 0) {
+	  moveRate = 1;
+	  affectedByPhysics = false;
+	}
 
-  	// moveRate = 0;
-  	camPos[1] += 0.33;
-  	camLookAt[1] += 0.33;
-  	camUp[1] += 0.33;
+	if (stack.length >= 2) {
+		var ultimoQuadrado = stack[stack.length - 1];
+		var penultimoQuadrado = stack[stack.length - 2];
+		shouldContinueLoop = checkCollision(ultimoQuadrado, penultimoQuadrado);
+	}
 
-  	const topp = stack[stack.length - 1]
-
-  	stackPos++;
-
-  	if (stackPos % 2 == 0) { speed -= 0.5; speed = math.max(speed, 1)}
-
-  	if (currentDir === "z") {
-  		stack.push([[-3.0, topp[0][1] + 0.33,  0.0], [topp[1][0], topp[1][1], topp[1][2]/* * 0.9*/], stackPos]);
-  		currentDir = "x";
-
-  	} else if (currentDir === "x") {
-  		stack.push([[ 0.0, topp[0][1] + 0.33, -3.0], [topp[1][0]/* * 0.9*/, topp[1][1], topp[1][2]], stackPos]);
-  		currentDir = "z";
-
-  	}
-
-
-  	stack = stack.slice(-10);
-
-  	configCam();
-  } else if (event.key === ' ' &&moveRate == 0) { moveRate = 1; affectedByPhysics = false;}
-});
+  });
 
 function resizeCanvas() {
   const canvas = document.getElementById('glcanvas');
@@ -281,33 +293,160 @@ async function initTexture() {
 }
 
 function loop() {
+	var pointsDisplay = document.getElementById('pointsDisplay');
+	pointsDisplay.textContent = points;
+
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+	
 	var top = stack[stack.length - 1];
-
+  
 	if (currentDir === "z") {
-		top[0][2] += moveRate / speed;
-
-		if (math.abs(top[0][2]) >= 3.1) {
-			moveRate *= -1;
-		}
-	
+	  top[0][2] += moveRate / speed;
+  
+	  if (Math.abs(top[0][2]) >= 3.1) {
+		moveRate *= -1;
+	  }
+  
 	} else if (currentDir === "x") {
-		top[0][0] += moveRate / speed;
-
-		if (math.abs(top[0][0]) >= 3.1) {
-			moveRate *= -1;
-		}
+	  top[0][0] += moveRate / speed;
+  
+	  if (Math.abs(top[0][0]) >= 3.1) {
+		moveRate *= -1;
+	  }
 	}
-	
+  
 	specular.position = [top[0][0], top[0][1] + 1.0, top[0][2]];
-
+  
 	for (var i = 0; i < stack.length; i++) {
-		draw3DObject(boxGeometry, stack[i]);
-
+	  draw3DObject(boxGeometry, stack[i]);
 	}
-
+  
 	configCam();
+	
+	if (!shouldContinueLoop) {
+		return; // Interrompe a função loop sem chamar requestAnimationFrame
+	}
+  
+	animationId = requestAnimationFrame(loop);
+}
 
-	requestAnimationFrame(loop);
+function checkCollision(obj1, obj2) {
+	var pos1 = obj1[0];
+	var scale1 = obj1[1];
+	var pos2 = obj2[0];
+	var scale2 = obj2[1];
+	// console.log(pos1)
+	// console.log(scale1)
+	// console.log(pos2)
+	// console.log(scale2)
+	// limites do obj1
+	var obj1MinX = pos1[0] - scale1[0] / 2;
+	var obj1MaxX = pos1[0] + scale1[0] / 2;
+	var obj1MinY = pos1[1] - scale1[1] / 2;
+	var obj1MaxY = pos1[1] + scale1[1] / 2;
+	var obj1MinZ = pos1[2] - scale1[2] / 2;
+	var obj1MaxZ = pos1[2] + scale1[2] / 2;
+
+	// limites do obj2 
+	var obj2MinX = pos2[0] - scale2[0] / 2;
+	var obj2MaxX = pos2[0] + scale2[0] / 2;
+	var obj2MinY = pos2[1] - scale2[1] / 2;
+	var obj2MaxY = pos2[1] + scale2[1] / 2;
+	var obj2MinZ = pos2[2] - scale2[2] / 2;
+	var obj2MaxZ = pos2[2] + scale2[2] / 2;
+  
+	// Verificar se há sobreposição nos eixos X e Z
+	var overlapX = obj1MinX <= obj2MaxX-0.1 && obj1MaxX-0.1 >= obj2MinX;
+	//var overlapY = obj1MinY <= obj2MaxY && obj1MaxY >= obj2MinY;
+	var overlapZ = obj1MinZ <= obj2MaxZ-0.1 && obj1MaxZ-0.1 >= obj2MinZ;
+
+	if (overlapX  || overlapZ) {
+	  console.log("Colisão detectada!");
+	  points = points +1;
+
+	  CortarObjetos(obj1 , obj2)
+	  return true;
+	} else {
+	  console.log("Sem colisão.");
+	  return false;
+	}
+}
+
+function CortarObjetos(obj1, obj2) {
+	var overlappingScales = findOverlappingScales(obj1, obj2);
+	
+	var overlappingScaleX = overlappingScales[0];
+	var overlappingScaleY = overlappingScales[1];
+	var overlappingScaleZ = overlappingScales[2];
+  
+	stack[stack.length - 1][1] = [overlappingScaleX, overlappingScaleY, overlappingScaleZ];
+	stack[stack.length - 2][1] = [overlappingScaleX, overlappingScaleY, overlappingScaleZ];
+	stack[0][1] = [overlappingScaleX, overlappingScaleY, overlappingScaleZ];
+}
+
+function findOverlappingScales(obj1, obj2) {
+	var pos1 = obj1[0].slice();
+	var scale1 = obj1[1].slice();
+	var pos2 = obj2[0].slice();
+	var scale2 = obj2[1].slice();
+	
+	var minX1 = pos1[0] - scale1[0] / 2;
+	var maxX1 = pos1[0] + scale1[0] / 2;
+	var minY1 = pos1[1] - scale1[1] / 2;
+	var maxY1 = pos1[1] + scale1[1] / 2;
+	var minZ1 = pos1[2] - scale1[2] / 2;
+	var maxZ1 = pos1[2] + scale1[2] / 2;
+  
+	var minX2 = pos2[0] - scale2[0] / 2;
+	var maxX2 = pos2[0] + scale2[0] / 2;
+	var minY2 = pos2[1] - scale2[1] / 2;
+	var maxY2 = pos2[1] + scale2[1] / 2;
+	var minZ2 = pos2[2] - scale2[2] / 2;
+	var maxZ2 = pos2[2] + scale2[2] / 2;
+  
+	var overlappingMinX = Math.max(minX1, minX2);
+	var overlappingMaxX = Math.min(maxX1, maxX2);
+	var overlappingMinY = Math.max(minY1, minY2);
+	var overlappingMaxY = Math.min(maxY1, maxY2);
+	var overlappingMinZ = Math.max(minZ1, minZ2);
+	var overlappingMaxZ = Math.min(maxZ1, maxZ2);
+
+	//console.log(overlappingMinX);
+	//console.log(overlappingMaxX);
+	//console.log(overlappingMinZ);
+	//console.log(overlappingMaxZ);
+	// talvez o calculo da nova escala esteja sendo feita de forma errada ? não sei..... tnc
+	// sinceramente acho que isso aqui ta tudo errado :) 
+	var overlappingScaleX = overlappingMaxX - overlappingMinX
+	var overlappingScaleY = overlappingMaxY - overlappingMinY;
+	var overlappingScaleZ = overlappingMaxZ - overlappingMinZ;
+
+	return [overlappingScaleX, overlappingScaleY, overlappingScaleZ];
+}
+// tentei usar os vertices para ver se tinha colisão ou não, nã funcionou . Tentei de outra forma,
+// mas deixei a função aqui pra qualquer coisa
+function calcularVertices(obj) {
+	var position = obj[0];
+	var scale = obj[1];
+  
+	var posX = position[0];
+	var posY = position[1];
+	var posZ = position[2];
+  
+	var scaleX = scale[0];
+	var scaleY = scale[1];
+	var scaleZ = scale[2];
+  
+	var vertices = [];
+  
+	vertices.push([posX - scaleX / 2, posY - scaleY / 2, posZ - scaleZ / 2]); // Vértice 0
+	vertices.push([posX + scaleX / 2, posY - scaleY / 2, posZ - scaleZ / 2]); // Vértice 1
+	vertices.push([posX + scaleX / 2, posY + scaleY / 2, posZ - scaleZ / 2]); // Vértice 2
+	vertices.push([posX - scaleX / 2, posY + scaleY / 2, posZ - scaleZ / 2]); // Vértice 3
+	vertices.push([posX - scaleX / 2, posY - scaleY / 2, posZ + scaleZ / 2]); // Vértice 4
+	vertices.push([posX + scaleX / 2, posY - scaleY / 2, posZ + scaleZ / 2]); // Vértice 5
+	vertices.push([posX + scaleX / 2, posY + scaleY / 2, posZ + scaleZ / 2]); // Vértice 6
+	vertices.push([posX - scaleX / 2, posY + scaleY / 2, posZ + scaleZ / 2]); // Vértice 7
+  
+	return vertices;
 }
