@@ -364,7 +364,7 @@ function checkCollision(obj1, obj2) {
 	  console.log("Colisão detectada!");
 	  points = points +1;
 
-	  CortarObjetos(obj1 , obj2)
+	  //CortarObjetos(obj1 , obj2)
 	  return true;
 	} else {
 	  console.log("Sem colisão.");
