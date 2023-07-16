@@ -363,13 +363,91 @@ function checkCollision(obj1, obj2) {
 	if (overlapX  || overlapZ) {
 	  console.log("Colisão detectada!");
 	  points = points +1;
-
+	  Diminuir_escala(obj1,obj2);
 	  //CortarObjetos(obj1 , obj2)
 	  return true;
 	} else {
 	  console.log("Sem colisão.");
 	  return false;
 	}
+}
+function Diminuir_escala(obj1,obj2){
+	var scale1 = obj1[1];
+	var scale2 = obj1[1];
+	// Reduzir a escala em 5%
+    scale1[0] *= 0.98;
+    scale1[2] *= 0.98;
+    scale2[0] *= 0.98;
+    scale2[2] *= 0.98;
+	console.log(scale1[0],
+		scale1[1],
+		scale1[2],
+		scale2[0],
+		scale2[1],
+		scale2[2]);
+	stack[stack.length - 1][1]=[scale1[0],scale1[1],scale1[2]];
+	stack[stack.length - 2][1]=[scale2[0],scale2[1],scale2[2]];
+}
+function CortarObjects2(obj1,obj2){
+		var pos1 = obj1[0];
+		var scale1 = obj1[1];
+		var pos2 = obj2[0];
+		var scale2 = obj2[1];
+		// console.log(pos1)
+		// console.log(scale1)
+		// console.log(pos2)
+		// console.log(scale2)
+		// limites do obj1
+		var obj1MinX = pos1[0] - scale1[0] / 2;
+		var obj1MaxX = pos1[0] + scale1[0] / 2;
+		var obj1MinY = pos1[1] - scale1[1] / 2;
+		var obj1MaxY = pos1[1] + scale1[1] / 2;
+		var obj1MinZ = pos1[2] - scale1[2] / 2;
+		var obj1MaxZ = pos1[2] + scale1[2] / 2;
+
+		// limites do obj2 
+		var obj2MinX = pos2[0] - scale2[0] / 2;
+		var obj2MaxX = pos2[0] + scale2[0] / 2;
+		var obj2MinY = pos2[1] - scale2[1] / 2;
+		var obj2MaxY = pos2[1] + scale2[1] / 2;
+		var obj2MinZ = pos2[2] - scale2[2] / 2;
+		var obj2MaxZ = pos2[2] + scale2[2] / 2;
+	
+		// Verificar se há sobreposição nos eixos X e Z
+		var overlapX = obj1MinX <= obj2MaxX-0.1 && obj1MaxX-0.1 >= obj2MinX;
+		//var overlapY = obj1MinY <= obj2MaxY && obj1MaxY >= obj2MinY;
+		var overlapZ = obj1MinZ <= obj2MaxZ-0.1 && obj1MaxZ-0.1 >= obj2MinZ;
+	// Calcular pontos de interseção
+	   var intersectMinX = Math.max(obj1MinX, obj2MinX);
+	   var intersectMaxX = Math.min(obj1MaxX, obj2MaxX);
+	   var intersectMinZ = Math.max(obj1MinZ, obj2MinZ);
+	   var intersectMaxZ = Math.min(obj1MaxZ, obj2MaxZ);
+
+	   // Criar novos objetos a partir dos pontos de interseção
+	   var newObj1Pos, newObj1Scale, newObj2Pos, newObj2Scale;
+
+	   if (currentDir === "x") {
+		   newObj1Pos = [(intersectMinX + intersectMaxX) / 2, pos1[1], pos1[2]];
+		   newObj1Scale = [intersectMaxX - intersectMinX, scale1[1], scale1[2]];
+		   newObj2Pos = [(intersectMinX + intersectMaxX) / 2, pos2[1], pos2[2]];
+		   newObj2Scale = [intersectMaxX - intersectMinX, scale2[1], scale2[2]];
+	   } else if (currentDir === "z") {
+		   newObj1Pos = [pos1[0], pos1[1], (intersectMinZ + intersectMaxZ) / 2];
+		   newObj1Scale = [scale1[0], scale1[1], intersectMaxZ - intersectMinZ];
+		   newObj2Pos = [pos2[0], pos2[1], (intersectMinZ + intersectMaxZ) / 2];
+		   newObj2Scale = [scale2[0], scale2[1], intersectMaxZ - intersectMinZ];
+	   }
+
+	   // Atualizar a pilha de objetos com os novos objetos
+	   //stack[stack.length - 1][0]=newObj1Pos;
+	   stack[stack.length - 1][1]=newObj1Scale;
+	   //stack[stack.length - 2][0]=newObj2Pos;
+	   stack[stack.length - 2][1]=newObj2Scale;
+	   //stack.push([newObj1Pos, newObj1Scale]);
+	   //stack.push([newObj2Pos, newObj2Scale]);
+	   console.log(stack[stack.length - 1][0]);
+	   console.log(newObj1Scale);
+	   console.log(stack[stack.length - 2][0]);
 }
 
 function CortarObjetos(obj1, obj2) {
