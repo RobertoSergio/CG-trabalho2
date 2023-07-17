@@ -69,7 +69,11 @@ window.addEventListener('keydown', function(event) {
 		stack.push([[ 0.0, topp[0][1] + 0.33, -3.0], [topp[1][0]/* * 0.9*/, topp[1][1], topp[1][2]], stackPos]);
 		currentDir = "z";
 	  }
-  
+	  if (stack.length >= 2) {
+		var ultimoQuadrado = stack[stack.length - 1];
+		var penultimoQuadrado = stack[stack.length - 2];
+		shouldContinueLoop = checkCollision(ultimoQuadrado, penultimoQuadrado);
+	  }
 	  stack = stack.slice(-10);
   
 	  configCam();
@@ -77,13 +81,6 @@ window.addEventListener('keydown', function(event) {
 	  moveRate = 1;
 	  affectedByPhysics = false;
 	}
-
-	if (stack.length >= 2) {
-		var ultimoQuadrado = stack[stack.length - 1];
-		var penultimoQuadrado = stack[stack.length - 2];
-		shouldContinueLoop = checkCollision(ultimoQuadrado, penultimoQuadrado);
-	}
-
   });
 
 function resizeCanvas() {
