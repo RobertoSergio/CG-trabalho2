@@ -69,13 +69,12 @@ window.addEventListener('keydown', function(event) {
 		stack.push([[ 0.0, topp[0][1] + 0.33, -3.0], [topp[1][0]/* * 0.9*/, topp[1][1], topp[1][2]], stackPos]);
 		currentDir = "z";
 	  }
-	  if (stack.length >= 2) {
+	  stack = stack.slice(-10);
+  	  if (stack.length >= 2) {
 		var ultimoQuadrado = stack[stack.length - 1];
 		var penultimoQuadrado = stack[stack.length - 2];
 		shouldContinueLoop = checkCollision(ultimoQuadrado, penultimoQuadrado);
 	  }
-	  stack = stack.slice(-10);
-  
 	  configCam();
 	} else if (event.key === ' ' && moveRate == 0) {
 	  moveRate = 1;
